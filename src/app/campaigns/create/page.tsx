@@ -1,19 +1,33 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 export default function CreateCampaignPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     subject: "",
-    audience: "all",
-    schedule: "now"
+    audience: "all"
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Campaign saved!");
+    setLoading(true);
+    
+    try {
+      await fetch("/api/campaigns", {
+        method: "POST",
+        body: JSON.stringify(formData)
+      });
+      router.push("/campaigns");
+    } catch (error) {
+      alert("Failed to create campaign");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -68,8 +82,8 @@ export default function CreateCampaignPage() {
             <Link href="/campaigns" className="px-6 py-2 border rounded-lg hover:bg-gray-50 font-medium transition-colors">
               Cancel
             </Link>
-            <button type="submit" className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
-              Save Campaign
+            <button disabled={loading} type="submit" className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50">
+              {loading ? "Saving..." : "Save Campaign"}
             </button>
           </div>
         </form>

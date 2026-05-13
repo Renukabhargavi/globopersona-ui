@@ -1,13 +1,26 @@
+"use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 
 export default function CampaignsPage() {
-  const campaigns = [
-    { id: 1, name: "Summer Sale 2026", status: "Active", sent: "12,000", clicks: "3,400", date: "May 13, 2026" },
-    { id: 2, name: "Welcome Series Flow", status: "Completed", sent: "5,430", clicks: "1,200", date: "May 10, 2026" },
-    { id: 3, name: "Monthly Newsletter", status: "Draft", sent: "-", clicks: "-", date: "May 14, 2026" },
-    { id: 4, name: "Re-engagement Push", status: "Active", sent: "8,900", clicks: "2,100", date: "May 12, 2026" },
-  ];
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/campaigns")
+      .then(res => res.json())
+      .then(data => {
+        setCampaigns(data);
+        setLoading(false);
+      });
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure?")) return;
+    await fetch(`/api/campaigns/${id}`, { method: "DELETE" });
+    setCampaigns(prev => prev.filter(c => c.id !== id));
+  };
 
   return (
     <div className="space-y-6">
@@ -33,7 +46,8 @@ export default function CampaignsPage() {
               </tr>
             </thead>
             <tbody className="divide-y relative">
-              {campaigns.map((camp) => (
+              {loading && <tr><td colSpan={6} className="px-6 py-4 text-center">Loading...</td></tr>}
+              {!loading && campaigns.map((camp) => (
                 <tr key={camp.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-6 py-4 font-medium text-gray-900">{camp.name}</td>
                   <td className="px-6 py-4">
@@ -45,11 +59,14 @@ export default function CampaignsPage() {
                       {camp.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4">{camp.sent}</td>
-                  <td className="px-6 py-4">{camp.clicks}</td>
+                  <td className="px-6 py-4">{camp.sent || '-'}</td>
+                  <td className="px-6 py-4">{camp.clicks || '-'}</td>
                   <td className="px-6 py-4 text-gray-500">{camp.date}</td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-right space-x-4">
                     <button className="text-blue-600 hover:underline font-medium text-sm">Edit</button>
+                    <button onClick={() => handleDelete(camp.id)} className="text-red-600 hover:underline font-medium text-sm">
+                      <Trash2 className="w-4 h-4 inline" />
+                    </button>
                   </td>
                 </tr>
               ))}
